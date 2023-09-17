@@ -91,9 +91,8 @@ void RequestVettingStation::handleRequest(SocketPoll& poll, SocketDisposition& d
         case StorageBase::StorageType::Unauthorized:
             LOG_ERR("No authorized hosts found matching the target host [" << uriPublic.getHost()
                                                                            << "] in config");
-            _ws->shutdown(WebSocketHandler::StatusCodes::POLICY_VIOLATION,
-                          "error: cmd=internal kind=unauthorized");
-            _socket->ignoreInput();
+            sendErrorAndShutdown(_ws, _socket, "error: cmd=internal kind=unauthorized",
+                                 WebSocketHandler::StatusCodes::POLICY_VIOLATION);
             break;
 
         case StorageBase::StorageType::FileSystem:
@@ -213,16 +212,14 @@ void RequestVettingStation::checkFileInfo(SocketPoll& poll, const std::string& u
             if (httpResponse->statusLine().statusCode() == http::StatusCode::Forbidden)
             {
                 LOG_ERR("Access denied to [" << uriAnonym << ']');
-                const std::string msg = "error: cmd=storage kind=unauthorized";
-                _ws->shutdown(WebSocketHandler::StatusCodes::POLICY_VIOLATION, msg);
-                _socket->ignoreInput();
+                sendErrorAndShutdown(_ws, _socket, "error: cmd=storage kind=unauthorized",
+                                     WebSocketHandler::StatusCodes::POLICY_VIOLATION);
                 return;
             }
 
             LOG_ERR("Invalid URI or access denied to [" << uriAnonym << ']');
-            const std::string msg = "error: cmd=storage kind=unauthorized";
-            _ws->shutdown(WebSocketHandler::StatusCodes::POLICY_VIOLATION, msg);
-            _socket->ignoreInput();
+            sendErrorAndShutdown(_ws, _socket, "error: cmd=storage kind=unauthorized",
+                                 WebSocketHandler::StatusCodes::POLICY_VIOLATION);
             return;
         }
 
@@ -269,6 +266,8 @@ void RequestVettingStation::createDocBroker(const std::string& docKey, const std
     if (!docBroker)
     {
         LOG_ERR("Failed to create DocBroker [" << docKey << ']');
+        sendErrorAndShutdown(_ws, _socket, "error: cmd=internal kind=load",
+                             WebSocketHandler::StatusCodes::UNEXPECTED_CONDITION);
         return;
     }
 
@@ -278,6 +277,8 @@ void RequestVettingStation::createDocBroker(const std::string& docKey, const std
     if (!clientSession)
     {
         LOG_ERR("Failed to create Client Session [" << _id << "] on docKey [" << docKey << ']');
+        sendErrorAndShutdown(_ws, _socket, "error: cmd=internal kind=load",
+                             WebSocketHandler::StatusCodes::UNEXPECTED_CONDITION);
         return;
     }
 
@@ -335,18 +336,16 @@ void RequestVettingStation::createDocBroker(const std::string& docKey, const std
                 LOG_ERR_S("Unauthorized Request while starting session on "
                           << docBroker->getDocKey() << " for socket #" << moveSocket->getFD()
                           << ". Terminating connection. Error: " << exc.what());
-                const std::string msg = "error: cmd=internal kind=unauthorized";
-                _ws->shutdown(WebSocketHandler::StatusCodes::POLICY_VIOLATION, msg);
-                moveSocket->ignoreInput();
+                sendErrorAndShutdown(_ws, moveSocket, "error: cmd=internal kind=unauthorized",
+                                     WebSocketHandler::StatusCodes::POLICY_VIOLATION);
             }
             catch (const StorageConnectionException& exc)
             {
                 LOG_ERR_S("Storage error while starting session on "
                           << docBroker->getDocKey() << " for socket #" << moveSocket->getFD()
                           << ". Terminating connection. Error: " << exc.what());
-                const std::string msg = "error: cmd=storage kind=loadfailed";
-                _ws->shutdown(WebSocketHandler::StatusCodes::POLICY_VIOLATION, msg);
-                moveSocket->ignoreInput();
+                sendErrorAndShutdown(_ws, moveSocket, "error: cmd=storage kind=loadfailed",
+                                     WebSocketHandler::StatusCodes::POLICY_VIOLATION);
             }
             catch (const StorageSpaceLowException& exc)
             {
@@ -362,9 +361,18 @@ void RequestVettingStation::createDocBroker(const std::string& docKey, const std
                 LOG_ERR_S("Error while starting session on "
                           << docBroker->getDocKey() << " for socket #" << moveSocket->getFD()
                           << ". Terminating connection. Error: " << exc.what());
-                const std::string msg = "error: cmd=storage kind=loadfailed";
-                _ws->shutdown(WebSocketHandler::StatusCodes::POLICY_VIOLATION, msg);
-                moveSocket->ignoreInput();
+                sendErrorAndShutdown(_ws, moveSocket, "error: cmd=storage kind=loadfailed",
+                                     WebSocketHandler::StatusCodes::POLICY_VIOLATION);
             }
         });
+}
+
+void RequestVettingStation::sendErrorAndShutdown(const std::shared_ptr<WebSocketHandler>& ws,
+                                                 const std::shared_ptr<Socket>& socket,
+                                                 const std::string& msg,
+                                                 WebSocketHandler::StatusCodes statusCode)
+{
+    ws->sendMessage(msg);
+    ws->shutdown(statusCode, msg);
+    socket->ignoreInput();
 }
