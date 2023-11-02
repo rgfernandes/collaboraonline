@@ -921,7 +921,7 @@ L.Control.UIManager = L.Control.extend({
 		app.socket._onMessage({ textMsg: 'jsdialog: ' + JSON.stringify(closeMessage) });
 	},
 
-	showSnackbar: function(label, action, callback, timeout, hasProgress) {
+	showSnackbar: function(label, action, callback, timeout, hasProgress, withDismiss) {
 		if (!app.socket)
 			return;
 
@@ -942,6 +942,7 @@ L.Control.UIManager = L.Control.extend({
 					type: 'container',
 					children: [
 						action ? {id: labelId, type: 'fixedtext', text: label, labelFor: buttonId} : {id: 'label-no-action', type: 'fixedtext', text: label},
+						withDismiss ? {id: 'snackbar-dismiss', type: 'pushbutton', text: _('Dismiss')} : {},
 						hasProgress ? {id: 'progress', type: 'progressbar', value: 0, maxValue: 100} : {},
 						action ? {id: buttonId, type: 'pushbutton', text: action, labelledBy: labelId} : {}
 					]
@@ -959,14 +960,18 @@ L.Control.UIManager = L.Control.extend({
 
 				that.closeSnackbar();
 			}
+
+			if (object.id === 'snackbar-dismiss' && objectType === 'pushbutton' && eventType === 'click') {
+				that.closeSnackbar();
+			}
 		};
 
 		app.socket._onMessage({textMsg: 'jsdialog: ' + JSON.stringify(json), callback: builderCallback});
 	},
 
 	/// shows snackbar with progress
-	showProgressBar: function(message, buttonText, callback, timeout) {
-		this.showSnackbar(message, buttonText, callback, timeout ? timeout : -1, true);
+	showProgressBar: function(message, buttonText, callback, timeout, withDismiss) {
+		this.showSnackbar(message, buttonText, callback, timeout ? timeout : -1, true, withDismiss);
 	},
 
 	/// sets progressbar status, value should be in range 0-100
