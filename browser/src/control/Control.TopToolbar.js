@@ -227,6 +227,7 @@ L.Control.TopToolbar = L.Control.extend({
 			{type: 'break',   id: 'break-number', hidden: true},
 			{type: 'button', id: 'gridvisible', img: 'gridvisible', hint: _UNO('.uno:GridVisible'), uno: 'GridVisible', hidden: true},
 			{type: 'button', id: 'griduse', img: 'griduse', hint: _UNO('.uno:GridUse'), uno: 'GridUse', hidden: true},
+			{type: 'button', id: 'helplinesmove', img: 'helplinesmove', hint: _UNO('.uno:HelplinesMove'), uno: 'HelplinesMove', hidden: true},
 			{type: 'drop',  id: 'inserttable',  img: 'inserttable', hint: _('Insert table'), hidden: true, overlay: {onShow: window.insertTable}, html: window.getInsertTablePopupHtml(), lockUno: '.uno:InsertTable'},
 			{type: 'button',  id: 'insertgraphic',  img: 'insertgraphic', hint: _UNO('.uno:InsertGraphic', '', true), lockUno: '.uno:InsertGraphic'},
 			{type: 'button',  id: 'insertremotegraphic',  img: 'insertgraphic', hint: _UNO('.uno:InsertGraphic', '', true),  hidden: true, lockUno: '.uno:InsertGraphic'},
@@ -385,7 +386,7 @@ L.Control.TopToolbar = L.Control.extend({
 			if (toolbarUp) {
 				toolbarUp.show('resetimpress', 'breaksidebar', 'modifypage',
 					'leftpara', 'centerpara', 'rightpara', 'justifypara', 'breakpara', 'linespacing',
-					'gridvisible', 'griduse',
+					'gridvisible', 'griduse', 'helplinesmove',
 					'breakspacing', 'defaultbullet', 'defaultnumbering', 'breakbullet', 'inserttextbox', 'inserttable',  'insertannotation', 'backcolor',
 					'breaksidebar', 'modifypage', 'slidechangewindow', 'customanimation', 'masterslidespanel', 'navigator');
 				toolbarUp.hide('print-options');
@@ -394,7 +395,7 @@ L.Control.TopToolbar = L.Control.extend({
 		case 'drawing':
 			if (toolbarUp) {
 				toolbarUp.show('leftpara', 'centerpara', 'rightpara', 'justifypara', 'breakpara', 'linespacing',
-					'gridvisible', 'griduse',
+					'gridvisible', 'griduse', 'helplinesmove',
 					'breakspacing', 'defaultbullet', 'defaultnumbering', 'breakbullet', 'inserttextbox', 'inserttable', 'backcolor',
 					'breaksidebar', 'sidebar', 'insertconnectors');
 				toolbarUp.hide('print-options');

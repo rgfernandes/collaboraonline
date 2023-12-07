@@ -183,7 +183,6 @@ L.Control.NotebookbarBuilder = L.Control.JSDialogBuilder.extend({
 		this._toolitemHandlers['.uno:GlueInsertPoint'] = function() {};
 		this._toolitemHandlers['.uno:SnapPoints'] = function() {};
 		this._toolitemHandlers['.uno:SnapBorder'] = function() {};
-		this._toolitemHandlers['.uno:HelplinesMove'] = function() {};
 		this._toolitemHandlers['.uno:SnapFrame'] = function() {};
 		this._toolitemHandlers['.uno:HelplinesVisible'] = function() {};
 		this._toolitemHandlers['.uno:HelplinesUse'] = function() {};

@@ -220,6 +220,7 @@ var unoCommandsArray = {
 	'Grow':{global:{context:_('Increase Font Size'),menu:_('Increase Size'),},},
 	'HeaderAndFooter':{presentation:{menu:_('~Header and Footer...'),},},
 	'HelpMenu':{global:{menu:_('~Help'),},},
+	'HelplinesMove':{global:{menu:_('Helplines While Moving'),},},
 	'Hide':{spreadsheet:{menu:_('~Hide Sheet'),},},
 	'HideColumn':{spreadsheet:{context:_('H~ide Columns'),menu:_('~Hide'),},},
 	'HideDetail':{global:{menu:_('~Hide Details'),},},
