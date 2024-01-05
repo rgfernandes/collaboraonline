@@ -459,25 +459,42 @@ namespace Util
         std::size_t numDirtyKb = 0;
         if (file)
         {
+            fseek(file, 0, SEEK_END);
+            size_t size = ftell(file);
             rewind(file);
-            char line[4096] = { 0 };
-            while (fgets(line, sizeof (line), file))
-            {
-                if (line[0] != 'P')
-                    continue;
+            char *data = (char*)malloc(size+1);
+            if(fread((void*)data, 1, size, file) == size) {
+                data[size] = '\0';
+                char *line = data;
+                char *end;
+                do {
+                    end = strchr(line, '\n');
+                    if(end != NULL)
+                        *end = '\0';
 
-                const char *value;
+                    if (line[0] == 'P')
+                    {
 
-                // Shared_Dirty is accounted for by forkit's RSS
-                if ((value = startsWith(line, "Private_Dirty:", 14)))
-                {
-                    numDirtyKb += atoi(value);
-                }
-                else if ((value = startsWith(line, "Pss:", 4)))
-                {
-                    numPSSKb += atoi(value);
-                }
+                        const char *value;
+
+                        // Shared_Dirty is accounted for by forkit's RSS
+                        if ((value = startsWith(line, "Private_Dirty:", 14)))
+                        {
+                            numDirtyKb += atoi(value);
+                        }
+                        else if ((value = startsWith(line, "Pss:", 4)))
+                        {
+                            numPSSKb += atoi(value);
+                        }
+                    }
+                    if(end != NULL) {
+                        line = ++end;
+                    }else{
+                        break;
+                    }
+                }while (line < data + size );
             }
+            free(data);
         }
 
         return std::make_pair(numPSSKb, numDirtyKb);
