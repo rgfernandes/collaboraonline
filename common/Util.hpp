@@ -357,6 +357,12 @@ namespace Util
     {
         for (size_t i = 0; i < len; ++i)
         {
+            // Checks 4 bytes at once
+            if (i % 4 == 0 && i + 4 < len && !(*((uint32_t*)(data + i)) & 0x80808080u))
+            {
+                i += 4;
+                continue;
+            }
             if (data[i] < 0x80)
                 continue;
             if (data[i] >> 6 != 0x3)
