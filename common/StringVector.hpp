@@ -61,21 +61,24 @@ public:
 
         const char* start = data;
         const char* end = data;
-        for (std::size_t i = 0; i < size && data[i] != '\n'; ++i, ++end)
-        {
-            if (data[i] == delimiter)
-            {
-                if (start != end && *start != delimiter)
-                    tokens.emplace_back(start - data, end - start);
+        size_t size_data = size;
+        char *endOfData = (char*)memchr((void*)data, '\n', size_data);
+        if(endOfData != NULL)
+            size_data = endOfData - data;
 
-                start = end;
-            }
-            else if (*start == delimiter)
-                ++start;
+        while((end = (char*)memchr(start, delimiter, size_data - (size_t)(start - data))) != NULL)
+        {
+            if(start != end)
+                tokens.emplace_back(start - data, end - start);
+            start = ++end;
         }
 
-        if (start != end && *start != delimiter && *start != '\n')
-            tokens.emplace_back(start - data, end - start);
+        const char *e = data + size;
+        if(endOfData != NULL)
+            e = endOfData;
+
+        if (start != e && *start != delimiter && *start != '\n')
+            tokens.emplace_back(start - data, e - start);
     }
 
     // call func on each token until func returns true or we run out of tokens
@@ -89,23 +92,24 @@ public:
 
         const char* start = data;
         const char* end = data;
-        for (std::size_t i = 0; i < size && data[i] != '\n'; ++i, ++end)
-        {
-            if (data[i] == delimiter)
-            {
-                if (start != end && *start != delimiter)
-                {
-                    if (func(index++, std::string_view(start, end - start)))
-                        return;
-                }
+        size_t size_data = size;
+        char *endOfData = (char*)memchr((void*)data, '\n', size_data);
+        if(endOfData != NULL)
+            size_data = endOfData - data;
 
-                start = end;
-            }
-            else if (*start == delimiter)
-                ++start;
+        while ((end = (char*)memchr(start, delimiter, size_data - (size_t)(start - data))) != NULL)
+        {
+            if (start != end)
+                if (func(index++, std::string_view(start, end - start)))
+                    return;
+            start = ++end;
         }
 
-        if (start != end && *start != delimiter && *start != '\n')
+        const char *e = data + size;
+        if(endOfData != NULL)
+            e = endOfData;
+
+        if (start != e && *start != delimiter && *start != '\n')
             func(index, std::string_view(start, end - start));
     }
 
