@@ -475,38 +475,30 @@ namespace Log
 #endif
 
         const time_t tv_sec = tv.tv_sec;
-        struct tm tm;
-        localtime_r(&tv_sec, &tm);
 
-        // YYYY-MM-DD.
-        to_ascii_fixed<4>(pos, tm.tm_year + 1900);
-        pos[4] = '-';
-        pos += 5;
-        to_ascii_fixed<2>(pos, tm.tm_mon + 1);
-        pos[2] = '-';
-        pos += 3;
-        to_ascii_fixed<2>(pos, tm.tm_mday);
-        pos[2] = ' ';
-        pos += 3;
+        static char* timestring = (char*)malloc(50);
+        static time_t sec = 0;
+        static int tz_wrote = 0;
 
-        // HH:MM:SS.uS
-        to_ascii_fixed<2>(pos, tm.tm_hour);
-        pos[2] = ':';
-        pos += 3;
-        to_ascii_fixed<2>(pos, tm.tm_min);
-        pos[2] = ':';
-        pos += 3;
-        to_ascii_fixed<2>(pos, tm.tm_sec);
-        pos[2] = '.';
-        pos += 3;
+        if(sec != tv_sec) {
+            struct tm tm;
+            localtime_r(&tv_sec, &tm);
+            sprintf(timestring, "%04d-%02d-%02d %02d:%02d:%02d.                   ",
+                     tm.tm_year + 1900,
+                     tm.tm_mon,
+                     tm.tm_mday,
+                     tm.tm_hour,
+                     tm.tm_min,
+                     tm.tm_sec);
+            tz_wrote = std::strftime(timestring + 27, 10, "%z", &tm);
+            *((uint16_t*)(timestring + 27 + tz_wrote)) = 0x0020; // " \0"
+            sec = tv_sec;
+        }
+
+        memcpy(pos, timestring, 28 + tz_wrote);
+        pos += 20;
         to_ascii_fixed<6>(pos, tv.tv_usec);
-        pos[6] = ' ';
-        pos += 7;
-
-        // Time zone differential
-        const auto tz_wrote = std::strftime(pos, 10, "%z", &tm);
-        pos[tz_wrote] = ' ';
-        pos += tz_wrote + 1; // + Skip the space we added.
+        pos += 7 + tz_wrote + 1;
 
         // Thread name and log level
         pos[0] = '[';
