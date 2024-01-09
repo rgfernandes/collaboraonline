@@ -55,19 +55,17 @@ int getLevenshteinDist(const std::string& string1, const std::string& string2)
     int matrix[string1.size() + 1][string2.size() + 1];
     std::memset(matrix, 0, sizeof(matrix[0][0]) * (string1.size() + 1) * (string2.size() + 1));
 
-    for (std::size_t i = 0; i < string1.size() + 1; i++)
+    for (std::size_t j = 0; j < string2.size() + 1; j++)
     {
-        for (std::size_t j = 0; j < string2.size() + 1; j++)
+        matrix[0][j] = j;
+    }
+
+    for (std::size_t i = 1; i < string1.size() + 1; i++)
+    {
+        matrix[i][0] = i;
+        for (std::size_t j = 1; j < string2.size() + 1; j++)
         {
-            if (i == 0)
-            {
-                matrix[i][j] = j;
-            }
-            else if (j == 0)
-            {
-                matrix[i][j] = i;
-            }
-            else if (string1[i - 1] == string2[j - 1])
+            if (string1[i - 1] == string2[j - 1])
             {
                 matrix[i][j] = matrix[i - 1][j - 1];
             }
