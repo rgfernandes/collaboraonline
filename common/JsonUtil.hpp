@@ -52,20 +52,28 @@ inline bool parseJSON(const std::string& json, Poco::JSON::Object::Ptr& object)
 inline
 int getLevenshteinDist(const std::string& string1, const std::string& string2)
 {
-    int matrix[string1.size() + 1][string2.size() + 1];
+    unsigned char matrix[string1.size() + 1][string2.size() + 1];
     std::memset(matrix, 0, sizeof(matrix[0][0]) * (string1.size() + 1) * (string2.size() + 1));
+    std::size_t i,j;
 
-    for (std::size_t j = 0; j < string2.size() + 1; j++)
+    // Fill the first line using 4 values at once
+    uint32_t value = 0x03020100u;
+    for (j = 0; j < ((string2.size() + 1) & 0xfffffffcu); j += 4, value += 0x04040404u)
+    {
+        ((uint32_t*)matrix)[j/4] = value;
+    }
+    for (; j < string2.size() + 1; j++)
     {
         matrix[0][j] = j;
     }
 
-    for (std::size_t i = 1; i < string1.size() + 1; i++)
+    for (i = 1; i < string1.size() + 1; i++)
     {
         matrix[i][0] = i;
-        for (std::size_t j = 1; j < string2.size() + 1; j++)
+        const char s1 = string1[i - 1];
+        for (j = 1; j < string2.size() + 1; j++)
         {
-            if (string1[i - 1] == string2[j - 1])
+            if (s1 == string2[j - 1])
             {
                 matrix[i][j] = matrix[i - 1][j - 1];
             }
