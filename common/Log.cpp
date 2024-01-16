@@ -479,8 +479,12 @@ namespace Log
         static char* timestring = (char*)malloc(50);
         static time_t sec = 0;
         static int tz_wrote = 0;
+        static int count = 0;
+        static int cachedcount = 0;
 
+        count++;
         if(sec != tv_sec) {
+            cachedcount++;
             struct tm tm;
             localtime_r(&tv_sec, &tm);
             sprintf(timestring, "%04d-%02d-%02d %02d:%02d:%02d.                   ",
@@ -495,6 +499,8 @@ namespace Log
             sec = tv_sec;
         }
 
+        if(count % 100 == 0)
+            printf("%s Count: %d Non-cached: %d\n", Util::getThreadName(), count, cachedcount);
         memcpy(pos, timestring, 28 + tz_wrote);
         pos += 20;
         to_ascii_fixed<6>(pos, tv.tv_usec);
