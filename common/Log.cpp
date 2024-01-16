@@ -476,9 +476,9 @@ namespace Log
 
         const time_t tv_sec = tv.tv_sec;
 
-        static char* timestring = (char*)malloc(50);
+        static char* timestring = (char*)malloc(60);
         static time_t sec = 0;
-        static int tz_wrote = 0;
+        static int timestringsize = 0;
 
         if(sec != tv_sec) {
             struct tm tm;
@@ -490,25 +490,22 @@ namespace Log
                      tm.tm_hour,
                      tm.tm_min,
                      tm.tm_sec);
-            tz_wrote = std::strftime(timestring + 27, 10, "%z", &tm);
-            *((uint16_t*)(timestring + 27 + tz_wrote)) = 0x0020; // " \0"
+            const int tz_wrote = std::strftime(timestring + 27, 10, "%z", &tm);
+            *((uint32_t*)(timestring + 27 + tz_wrote)) = 0x00205b20; // " [ "
+
+            // Thread name
+            char *s = strcopy(Util::getThreadName(), timestring + 27 + tz_wrote + 3);
+            *((uint32_t*)s) = 0x00205d20; // " ] "
+            timestringsize = s - timestring + 4;
+
             sec = tv_sec;
         }
 
-        memcpy(pos, timestring, 28 + tz_wrote);
-        pos += 20;
-        to_ascii_fixed<6>(pos, tv.tv_usec);
-        pos += 7 + tz_wrote + 1;
+        memcpy(pos, timestring, timestringsize);
+        to_ascii_fixed<6>(pos + 20, tv.tv_usec);
+        pos += timestringsize;
 
-        // Thread name and log level
-        pos[0] = '[';
-        pos[1] = ' ';
-        pos += 2;
-        pos = strcopy(Util::getThreadName(), pos);
-        pos[0] = ' ';
-        pos[1] = ']';
-        pos[2] = ' ';
-        pos += 3;
+        // log level
         pos = strcopy(level, pos);
         pos[0] = ' ';
         pos[1] = ' ';
